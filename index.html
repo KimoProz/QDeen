@@ -507,6 +507,8 @@
       <div class="series-categories">
         <button class="series-category-btn active" data-category="arSerious" onclick="switchSeriesCategory('arSerious')">مسلسلات عربية</button>
         <button class="series-category-btn" data-category="trSerious" onclick="switchSeriesCategory('trSerious')">مسلسلات تركية</button>
+        <button class="series-category-btn" data-category="krSerious" onclick="switchSeriesCategory('krSerious')">مسلسلات كورية</button>
+        <button class="series-category-btn" data-category="aniSerious" onclick="switchSeriesCategory('aniSerious')">مسلسلات أنمي</button>
         <button class="series-category-btn" data-category="foreignSerious" onclick="switchSeriesCategory('foreignSerious')">مسلسلات أجنبية</button>
       </div>
       
@@ -1278,7 +1280,7 @@
       });
       
       // Series count (count episodes)
-      const seriesCategories = ['arSerious', 'trSerious', 'foreignSerious'];
+      const seriesCategories = ['arSerious', 'trSerious', 'krSerious', 'aniSerious', 'foreignSerious'];
       let totalEpisodes = 0;
       
       seriesCategories.forEach(cat => {
