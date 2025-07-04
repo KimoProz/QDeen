@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم - الأفلام والمسلسلات</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #6a11cb;
+      --secondary: #2575fc;
+      --dark: #121212;
+      --dark-light: #1e1e1e;
+      --light: #f5f5f5;
+      --success: #4CAF50;
+      --danger: #F44336;
+      --warning: #FF9800;
+      --info: #2196F3;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: var(--dark);
+      color: var(--light);
+      font-family: 'Tajawal', Arial, sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--dark-light);
+    }
+    
+    h1, h2, h3, h4 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--dark-light);
+    }
+    
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      position: relative;
+    }
+    
+    .tab.active {
+      border-bottom: 3px solid var(--primary);
+      color: var(--primary);
+    }
+    
+    .tab:hover:not(.active) {
+      border-bottom: 3px solid var(--dark-light);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--primary);
+      font-weight: bold;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      background-color: var(--dark-light);
+      color: var(--light);
+      border: 1px solid #333;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+    }
+    
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background-color: #3d8b40;
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background-color: #d32f2f;
+    }
+    
+    .btn-warning {
+      background-color: var(--warning);
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background-color: #e68a00;
+    }
+    
+    .btn-info {
+      background-color: var(--info);
+      color: white;
+    }
+    
+    .card {
+      background: var(--dark-light);
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .card-body {
+      display: flex;
+      align-items: flex-start;
+    }
+    
+    .card-img {
+      width: 120px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-left: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-info {
+      flex: 1;
+    }
+    
+    .card-title {
+      margin-bottom: 5px;
+      font-size: 18px;
+    }
+    
+    .card-text {
+      color: #94a3b8;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    .card-desc {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .badge-primary {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+    }
+    
+    .badge-success {
+      background-color: var(--success);
+      color: white;
+    }
+    
+    .badge-warning {
+      background-color: var(--warning);
+      color: white;
+    }
+    
+    .badge-info {
+      background-color: var(--info);
+      color: white;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--primary);
+    }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    
+    .progress-container {
+      width: 100%;
+      background-color: var(--dark-light);
+      border-radius: 6px;
+      margin: 15px 0;
+      display: none;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 20px;
+      border-radius: 6px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.3s;
+      text-align: center;
+      color: white;
+      font-size: 12px;
+      line-height: 20px;
+    }
+    
+    .upload-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .count-badge {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    
+    .series-cover {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    
+    .series-container {
+      margin-bottom: 30px;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 15px;
+      background: #1a1a1a;
+    }
+    
+    .series-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .episode-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    
+    .episode-card {
+      background: #252525;
+      border-radius: 8px;
+      padding: 10px;
+      transition: all 0.3s;
+    }
+    
+    .episode-card:hover {
+      background: #2e2e2e;
+    }
+    
+    .series-categories {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .series-category-btn {
+      padding: 8px 15px;
+      border-radius: 20px;
+      background: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .series-category-btn.active {
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+    }
+    
+    .series-category-btn:hover {
+      opacity: 0.8;
+    }
+    
+    .season-selector {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .season-selector select {
+      flex: 1;
+    }
+    
+    .season-card {
+      background: #252525;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .season-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .season-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .season-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    @media (max-width: 768px) {
+      .card-body {
+        flex-direction: column;
+      }
+      
+      .card-img {
+        width: 100%;
+        height: auto;
+        margin-left: 0;
+        margin-bottom: 15px;
+      }
+      
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .upload-options {
+        flex-direction: column;
+      }
+      
+      .series-categories {
+        flex-wrap: wrap;
+      }
+      
+      .season-selector {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-film"></i> لوحة تحكم الأفلام والمسلسلات</h1>
+    </header>
+    
+    <div class="tabs">
+      <div class="tab active" data-tab="movies">الأفلام <span id="moviesCount" class="count-badge">0</span></div>
+      <div class="tab" data-tab="series">المسلسلات <span id="seriesCount" class="count-badge">0</span></div>
+    </div>
+    
+    <!-- الأفلام Tab -->
+    <div class="tab-content active" id="movies">
+      <h2><i class="fas fa-film"></i> إضافة فيلم جديد</h2>
+      
+      <div class="form-group">
+        <label for="movieCategory">نوع الفيلم</label>
+        <select id="movieCategory">
+          <option value="ar">فيلم عربي</option>
+          <option value="en">فيلم إنجليزي</option>
+          <option value="ani">فيلم أنمي</option>
+          <option value="kr">فيلم كوري</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="movieName">اسم الفيلم</label>
+        <input type="text" id="movieName" placeholder="أدخل اسم الفيلم">
+      </div>
+      
+      <div class="upload-options">
+        <button class="btn-warning" onclick="document.getElementById('movieFileInput').click()">
+          <i class="fas fa-upload"></i> رفع ملف الفيلم
+        </button>
+        <input type="file" id="movieFileInput" style="display: none;" accept="video/*" onchange="handleMovieUpload(this.files)">
+        <button class="btn-primary" onclick="uploadMovieWithURL()">
+          <i class="fas fa-link"></i> استخدام رابط موجود
+        </button>
+      </div>
+      
+      <div class="progress-container" id="movieProgressContainer">
+        <div class="progress-bar" id="movieProgressBar">0%</div>
+      </div>
+      
+      <div class="form-group">
+        <label for="movieURL">رابط الفيلم</label>
+        <input type="text" id="movieURL" placeholder="سيتم ملؤه تلقائياً عند رفع الملف أو أدخل الرابط يدوياً">
+      </div>
+      
+      <div class="form-group">
+        <label for="movieImage">رابط الصورة</label>
+        <input type="text" id="movieImage" placeholder="أدخل رابط صورة الفيلم">
+      </div>
+      
+      <div class="form-group">
+        <label for="movieRating">تقييم الفيلم</label>
+        <input type="number" id="movieRating" step="0.1" min="0" max="10" placeholder="أدخل تقييم الفيلم من 0 إلى 10">
+      </div>
+      
+      <div class="form-group">
+        <label for="movieDesc">وصف الفيلم</label>
+        <textarea id="movieDesc" rows="3" placeholder="أدخل وصف مختصر للفيلم"></textarea>
+      </div>
+      
+      <button class="btn-primary" onclick="uploadMovie()"><i class="fas fa-upload"></i> رفع الفيلم</button>
+      
+      <h2 style="margin-top: 30px;"><i class="fas fa-list"></i> الأفلام المضافة</h2>
+      <div id="moviesList" class="grid"></div>
+    </div>
+    
+    <!-- المسلسلات Tab -->
+    <div class="tab-content" id="series">
+      <div class="series-categories">
+        <button class="series-category-btn active" data-category="arSerious" onclick="switchSeriesCategory('arSerious')">مسلسلات عربية</button>
+        <button class="series-category-btn" data-category="trSerious" onclick="switchSeriesCategory('trSerious')">مسلسلات تركية</button>
+        <button class="series-category-btn" data-category="foreignSerious" onclick="switchSeriesCategory('foreignSerious')">مسلسلات أجنبية</button>
+      </div>
+      
+      <div id="seriesFormContainer">
+        <h2><i class="fas fa-tv"></i> إدارة المسلسلات</h2>
+        
+        <div id="createSeriesSection">
+          <h3><i class="fas fa-plus"></i> إنشاء مسلسل جديد</h3>
+          
+          <div class="form-group">
+            <label for="seriesName">اسم المسلسل</label>
+            <input type="text" id="seriesName" placeholder="أدخل اسم المسلسل">
+          </div>
+          
+          <div class="form-group">
+            <label for="seriesCoverImage">صورة غلاف المسلسل</label>
+            <input type="text" id="seriesCoverImage" placeholder="أدخل رابط صورة الغلاف">
+            <button class="btn-info" style="margin-top: 10px;" onclick="document.getElementById('seriesCoverFileInput').click()">
+              <i class="fas fa-upload"></i> رفع صورة الغلاف
+            </button>
+            <input type="file" id="seriesCoverFileInput" style="display: none;" accept="image/*" onchange="handleSeriesCoverUpload(this.files)">
+          </div>
+          
+          <div class="progress-container" id="seriesCoverProgressContainer">
+            <div class="progress-bar" id="seriesCoverProgressBar">0%</div>
+          </div>
+          
+          <button class="btn-success" onclick="createSeries()"><i class="fas fa-plus"></i> إنشاء مسلسل</button>
+        </div>
+        
+        <div id="manageSeriesSection" style="display: none; margin-top: 30px;">
+          <h3><i class="fas fa-edit"></i> إدارة المسلسل المحدد</h3>
+          
+          <div class="form-group">
+            <label for="selectedSeriesName">اسم المسلسل</label>
+            <input type="text" id="selectedSeriesName" disabled>
+          </div>
+          
+          <div class="season-selector">
+            <select id="seasonSelect">
+              <option value="">اختر الموسم</option>
+            </select>
+            <button class="btn-success" onclick="createNewSeason()"><i class="fas fa-plus"></i> موسم جديد</button>
+          </div>
+          
+          <div id="seasonManagementSection" style="display: none;">
+            <h4><i class="fas fa-list"></i> إدارة الموسم</h4>
+            
+            <div class="form-group">
+              <label for="seasonDesc">وصف الموسم (اختياري)</label>
+              <textarea id="seasonDesc" rows="2" placeholder="أدخل وصف للموسم"></textarea>
+            </div>
+            
+            <div id="addEpisodeSection">
+              <div class="form-group">
+                <label for="episodeName">اسم الحلقة</label>
+                <input type="text" id="episodeName" placeholder="أدخل اسم الحلقة">
+              </div>
+              
+              <div class="form-group">
+                <label for="episodeTak">وصف الحلقة</label>
+                <input type="text" id="episodeTak" placeholder="مثال: الحلقة 1 - الجزء الأول">
+              </div>
+              
+              <div class="upload-options">
+                <button class="btn-warning" onclick="document.getElementById('episodeFileInput').click()">
+                  <i class="fas fa-upload"></i> رفع ملف الحلقة
+                </button>
+                <input type="file" id="episodeFileInput" style="display: none;" accept="video/*" onchange="handleEpisodeUpload(this.files)">
+                <button class="btn-primary" onclick="uploadEpisodeWithURL()">
+                  <i class="fas fa-link"></i> استخدام رابط موجود
+                </button>
+              </div>
+              
+              <div class="progress-container" id="episodeProgressContainer">
+                <div class="progress-bar" id="episodeProgressBar">0%</div>
+              </div>
+              
+              <div class="form-group">
+                <label for="episodeURL">رابط الحلقة</label>
+                <input type="text" id="episodeURL" placeholder="سيتم ملؤه تلقائياً عند رفع الملف أو أدخل الرابط يدوياً">
+              </div>
+              
+              <div class="form-group">
+                <label for="episodeImage">رابط صورة الحلقة</label>
+                <input type="text" id="episodeImage" placeholder="أدخل رابط صورة الحلقة">
+              </div>
+              
+              <div class="form-group">
+                <label for="episodeRating">تقييم الحلقة</label>
+                <input type="number" id="episodeRating" step="0.1" min="0" max="10" placeholder="أدخل تقييم الحلقة من 0 إلى 10">
+              </div>
+              
+              <div class="form-group">
+                <label for="episodeDesc">تفاصيل الحلقة</label>
+                <textarea id="episodeDesc" rows="3" placeholder="أدخل تفاصيل الحلقة"></textarea>
+              </div>
+              
+              <button class="btn-primary" onclick="uploadEpisode()"><i class="fas fa-upload"></i> رفع الحلقة</button>
+              <button class="btn-danger" onclick="deleteCurrentSeason()" style="margin-right: 10px;"><i class="fas fa-trash"></i> حذف الموسم</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 style="margin-top: 30px;"><i class="fas fa-list"></i> المسلسلات المضافة</h2>
+      <div id="seriesList"></div>
+    </div>
+  </div>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBmPMRk4pvowUnqQb3fCSTZqLRNiU6-ouo",
+      authDomain: "marvel1-654dd.firebaseapp.com",
+      databaseURL: "https://marvel1-654dd-default-rtdb.firebaseio.com",
+      projectId: "marvel1-654dd",
+      storageBucket: "marvel1-654dd.appspot.com",
+      messagingSenderId: "189921979866",
+      appId: "1:189921979866:android:95f48de58a69756be924e3"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const storage = firebase.storage();
+    
+    // Global variables
+    let currentSeriesCategory = 'arSerious';
+    let currentSelectedSeries = null;
+    let currentSelectedSeason = null;
+    
+    // Tab Switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        
+        if (tab.dataset.tab === 'movies') {
+          loadMovies();
+        } else if (tab.dataset.tab === 'series') {
+          loadSeries();
+        }
+      });
+    });
+    
+    // Switch series category
+    function switchSeriesCategory(category) {
+      currentSeriesCategory = category;
+      document.querySelectorAll('.series-category-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      document.querySelector(`.series-category-btn[data-category="${category}"]`).classList.add('active');
+      loadSeries();
+    }
+    
+    // Movies Functions
+    function handleMovieUpload(files) {
+      if (files.length === 0) return;
+      
+      const file = files[0];
+      const category = document.getElementById("movieCategory").value;
+      const movieName = document.getElementById("movieName").value.trim() || 'movie_' + Date.now();
+      const storageRef = storage.ref(`movies/${category}/${movieName}_${Date.now()}`);
+      const uploadTask = storageRef.put(file);
+      
+      const progressContainer = document.getElementById("movieProgressContainer");
+      const progressBar = document.getElementById("movieProgressBar");
+      
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          // Progress tracking
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.style.width = progress + '%';
+          progressBar.textContent = Math.round(progress) + '%';
+        },
+        (error) => {
+          // Handle unsuccessful uploads
+          alert(`❌ حدث خطأ في التحميل: ${error.message}`);
+          progressContainer.style.display = 'none';
+        },
+        () => {
+          // Handle successful uploads
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            document.getElementById("movieURL").value = downloadURL;
+            progressBar.textContent = 'تم التحميل بنجاح!';
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+            }, 2000);
+          });
+        }
+      );
+    }
+    
+    function uploadMovieWithURL() {
+      const url = prompt("الرجاء إدخال رابط الفيلم:");
+      if (url) {
+        document.getElementById("movieURL").value = url;
+      }
+    }
+    
+    function uploadMovie() {
+      const category = document.getElementById("movieCategory").value;
+      const name = document.getElementById("movieName").value.trim();
+      const url = document.getElementById("movieURL").value.trim();
+      const image = document.getElementById("movieImage").value.trim();
+      const rating = parseFloat(document.getElementById("movieRating").value);
+      const desc = document.getElementById("movieDesc").value.trim();
+      
+      if (!name || !url || !image || isNaN(rating) || !desc) {
+        alert("❌ الرجاء تعبئة جميع الحقول المطلوبة");
+        return;
+      }
+      
+      db.ref(category).once("value").then(snapshot => {
+        const count = snapshot.numChildren() + 1;
+        const key = "m" + count;
+        
+        db.ref(`${category}/${key}`).set({
+          name, url, image, rating, desc
+        }).then(() => {
+          alert("✅ تم رفع الفيلم بنجاح");
+          clearMovieForm();
+          loadMovies();
+          updateCounts();
+        }).catch(error => {
+          alert(`❌ حدث خطأ: ${error.message}`);
+        });
+      });
+    }
+    
+    function loadMovies() {
+      const category = document.getElementById("movieCategory").value;
+      const container = document.getElementById("moviesList");
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جارٍ التحميل...</div>';
+      
+      db.ref(category).once("value").then(snapshot => {
+        container.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+          container.innerHTML = '<div class="card">لا توجد أفلام مضافة بعد</div>';
+          updateCounts();
+          return;
+        }
+        
+        snapshot.forEach(child => {
+          const movie = child.val();
+          const key = child.key;
+          
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div class="card-header">
+              <h3 class="card-title">${movie.name}</h3>
+              <span class="badge badge-primary">${movie.rating}/10</span>
+            </div>
+            <div class="card-body">
+              <img src="${movie.image}" alt="${movie.name}" class="card-img" onerror="this.src='https://via.placeholder.com/120x180?text=No+Image'">
+              <div class="card-info">
+                <p class="card-text"><i class="fas fa-link"></i> <a href="${movie.url}" target="_blank">رابط الفيلم</a></p>
+                <p class="card-desc">${movie.desc}</p>
+                <button class="btn-danger" onclick="deleteItem('${category}', '${key}')"><i class="fas fa-trash"></i> حذف</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        updateCounts();
+      }).catch(error => {
+        container.innerHTML = `<div class="card">حدث خطأ في التحميل: ${error.message}</div>`;
+      });
+    }
+    
+    function clearMovieForm() {
+      document.getElementById("movieName").value = "";
+      document.getElementById("movieURL").value = "";
+      document.getElementById("movieImage").value = "";
+      document.getElementById("movieRating").value = "";
+      document.getElementById("movieDesc").value = "";
+    }
+    
+    // Series Functions
+    function handleSeriesCoverUpload(files) {
+      if (files.length === 0) return;
+      
+      const file = files[0];
+      const seriesName = document.getElementById("seriesName").value.trim() || 'series_cover_' + Date.now();
+      const storageRef = storage.ref(`series_covers/${currentSeriesCategory}/${seriesName}_${Date.now()}`);
+      const uploadTask = storageRef.put(file);
+      
+      const progressContainer = document.getElementById("seriesCoverProgressContainer");
+      const progressBar = document.getElementById("seriesCoverProgressBar");
+      
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.style.width = progress + '%';
+          progressBar.textContent = Math.round(progress) + '%';
+        },
+        (error) => {
+          alert(`❌ حدث خطأ في التحميل: ${error.message}`);
+          progressContainer.style.display = 'none';
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            document.getElementById("seriesCoverImage").value = downloadURL;
+            progressBar.textContent = 'تم التحميل بنجاح!';
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+            }, 2000);
+          });
+        }
+      );
+    }
+    
+    function handleEpisodeUpload(files) {
+      if (files.length === 0) return;
+      
+      const file = files[0];
+      const episodeName = document.getElementById("episodeName").value.trim() || 'episode_' + Date.now();
+      const storageRef = storage.ref(`episodes/${currentSeriesCategory}/${episodeName}_${Date.now()}`);
+      const uploadTask = storageRef.put(file);
+      
+      const progressContainer = document.getElementById("episodeProgressContainer");
+      const progressBar = document.getElementById("episodeProgressBar");
+      
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+      progressBar.textContent = '0%';
+      
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressBar.style.width = progress + '%';
+          progressBar.textContent = Math.round(progress) + '%';
+        },
+        (error) => {
+          alert(`❌ حدث خطأ في التحميل: ${error.message}`);
+          progressContainer.style.display = 'none';
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            document.getElementById("episodeURL").value = downloadURL;
+            progressBar.textContent = 'تم التحميل بنجاح!';
+            setTimeout(() => {
+              progressContainer.style.display = 'none';
+            }, 2000);
+          });
+        }
+      );
+    }
+    
+    function uploadEpisodeWithURL() {
+      const url = prompt("الرجاء إدخال رابط الحلقة:");
+      if (url) {
+        document.getElementById("episodeURL").value = url;
+      }
+    }
+    
+    function createSeries() {
+      const name = document.getElementById("seriesName").value.trim();
+      const cover = document.getElementById("seriesCoverImage").value.trim();
+      
+      if (!name || !cover) {
+        alert("❌ الرجاء تعبئة جميع الحقول المطلوبة");
+        return;
+      }
+      
+      // Generate series ID (x1, x2, ...)
+      db.ref(currentSeriesCategory).once("value").then(snapshot => {
+        const seriesCount = snapshot.numChildren() + 1;
+        const seriesId = "x" + seriesCount;
+        
+        db.ref(`${currentSeriesCategory}/${seriesId}`).set({
+          name: name,
+          cover: cover
+        }).then(() => {
+          alert("✅ تم إنشاء المسلسل بنجاح");
+          document.getElementById("seriesName").value = "";
+          document.getElementById("seriesCoverImage").value = "";
+          document.getElementById("createSeriesSection").style.display = "block";
+          document.getElementById("manageSeriesSection").style.display = "block";
+          currentSelectedSeries = seriesId;
+          document.getElementById("selectedSeriesName").value = name;
+          loadSeries();
+        }).catch(error => {
+          alert(`❌ حدث خطأ: ${error.message}`);
+        });
+      });
+    }
+    
+    function createNewSeason() {
+      if (!currentSelectedSeries) {
+        alert("❌ الرجاء تحديد مسلسل أولاً");
+        return;
+      }
+      
+      // Generate season ID (s1, s2, ...)
+      db.ref(`${currentSeriesCategory}/${currentSelectedSeries}`).once("value").then(snapshot => {
+        const seriesData = snapshot.val();
+        let seasonCount = 0;
+        
+        // Count existing seasons
+        Object.keys(seriesData).forEach(key => {
+          if (key.startsWith('s')) {
+            seasonCount++;
+          }
+        });
+        
+        const seasonId = "s" + (seasonCount + 1);
+        const seasonDesc = document.getElementById("seasonDesc").value.trim();
+        
+        db.ref(`${currentSeriesCategory}/${currentSelectedSeries}/${seasonId}`).set({
+          name: `الموسم ${seasonCount + 1}`,
+          desc: seasonDesc || ""
+        }).then(() => {
+          alert(`✅ تم إنشاء الموسم ${seasonCount + 1} بنجاح`);
+          loadSeasonsForSeries(currentSelectedSeries);
+          currentSelectedSeason = seasonId;
+          document.getElementById("seasonManagementSection").style.display = "block";
+          document.getElementById("seasonDesc").value = "";
+        }).catch(error => {
+          alert(`❌ حدث خطأ: ${error.message}`);
+        });
+      });
+    }
+    
+    function uploadEpisode() {
+      if (!currentSelectedSeries || !currentSelectedSeason) {
+        alert("❌ الرجاء تحديد مسلسل وموسم أولاً");
+        return;
+      }
+      
+      const name = document.getElementById("episodeName").value.trim();
+      const tak = document.getElementById("episodeTak").value.trim();
+      const url = document.getElementById("episodeURL").value.trim();
+      const image = document.getElementById("episodeImage").value.trim();
+      const rating = parseFloat(document.getElementById("episodeRating").value);
+      const desc = document.getElementById("episodeDesc").value.trim();
+      
+      if (!name || !tak || !url || !image || isNaN(rating) || !desc) {
+        alert("❌ الرجاء تعبئة جميع الحقول المطلوبة");
+        return;
+      }
+      
+      // Generate episode ID (m1, m2, ...)
+      db.ref(`${currentSeriesCategory}/${currentSelectedSeries}/${currentSelectedSeason}`).once("value").then(snapshot => {
+        const seasonData = snapshot.val();
+        let episodeCount = 0;
+        
+        // Count existing episodes
+        Object.keys(seasonData).forEach(key => {
+          if (key.startsWith('m')) {
+            episodeCount++;
+          }
+        });
+        
+        const episodeId = "m" + (episodeCount + 1);
+        
+        db.ref(`${currentSeriesCategory}/${currentSelectedSeries}/${currentSelectedSeason}/${episodeId}`).set({
+          name: name,
+          tak: tak,
+          url: url,
+          image: image,
+          rating: rating,
+          desc: desc
+        }).then(() => {
+          alert("✅ تم رفع الحلقة بنجاح");
+          clearEpisodeForm();
+          loadSeries();
+          updateCounts();
+        }).catch(error => {
+          alert(`❌ حدث خطأ: ${error.message}`);
+        });
+      });
+    }
+    
+    function loadSeries() {
+      const container = document.getElementById("seriesList");
+      container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> جارٍ التحميل...</div>';
+      
+      db.ref(currentSeriesCategory).once("value").then(snapshot => {
+        container.innerHTML = "";
+        
+        if (!snapshot.exists()) {
+          container.innerHTML = '<div class="card">لا توجد مسلسلات مضافة بعد</div>';
+          updateCounts();
+          return;
+        }
+        
+        snapshot.forEach(series => {
+          const seriesId = series.key;
+          const seriesData = series.val();
+          
+          const seriesContainer = document.createElement("div");
+          seriesContainer.className = "series-container";
+          seriesContainer.innerHTML = `
+            <div class="series-header">
+              <h3>${seriesData.name}</h3>
+              <div>
+                <button class="btn-primary" onclick="selectSeries('${seriesId}', '${seriesData.name}')"><i class="fas fa-edit"></i> إدارة</button>
+                <button class="btn-danger" onclick="deleteSeries('${seriesId}')"><i class="fas fa-trash"></i> حذف</button>
+              </div>
+            </div>
+            <img src="${seriesData.cover}" alt="${seriesData.name}" class="series-cover" onerror="this.src='https://via.placeholder.com/800x400?text=No+Cover'">
+            <div id="seasons-${seriesId}"></div>
+          `;
+          container.appendChild(seriesContainer);
+          
+          // Load seasons for this series
+          loadSeasonsForSeries(seriesId);
+        });
+        
+        updateCounts();
+      }).catch(error => {
+        container.innerHTML = `<div class="card">حدث خطأ في التحميل: ${error.message}</div>`;
+      });
+    }
+    
+    function loadSeasonsForSeries(seriesId) {
+      const seasonsContainer = document.getElementById(`seasons-${seriesId}`);
+      
+      db.ref(`${currentSeriesCategory}/${seriesId}`).once("value").then(snapshot => {
+        const seriesData = snapshot.val();
+        seasonsContainer.innerHTML = '';
+        
+        // Filter out non-season keys (like 'name', 'cover')
+        const seasons = Object.entries(seriesData).filter(([key]) => key.startsWith('s'));
+        
+        if (seasons.length === 0) {
+          seasonsContainer.innerHTML = '<p>لا توجد مواسم مضافة بعد</p>';
+          return;
+        }
+        
+        seasons.forEach(([seasonId, seasonData]) => {
+          const seasonCard = document.createElement("div");
+          seasonCard.className = "season-card";
+          seasonCard.innerHTML = `
+            <div class="season-header">
+              <div class="season-title">${seasonData.name}</div>
+              <div class="season-actions">
+                <button class="btn-primary" onclick="selectSeason('${seriesId}', '${seasonId}')"><i class="fas fa-edit"></i> إدارة</button>
+                <button class="btn-danger" onclick="deleteSeason('${seriesId}', '${seasonId}')"><i class="fas fa-trash"></i> حذف</button>
+              </div>
+            </div>
+            ${seasonData.desc ? `<p style="margin-bottom: 10px; color: #aaa;">${seasonData.desc}</p>` : ''}
+            <div id="episodes-${seriesId}-${seasonId}"></div>
+          `;
+          seasonsContainer.appendChild(seasonCard);
+          
+          // Load episodes for this season
+          loadEpisodesForSeason(seriesId, seasonId);
+        });
+        
+        // Update season select dropdown if this is the selected series
+        if (seriesId === currentSelectedSeries) {
+          updateSeasonSelect(seasons);
+        }
+      });
+    }
+    
+    function loadEpisodesForSeason(seriesId, seasonId) {
+      const episodesContainer = document.getElementById(`episodes-${seriesId}-${seasonId}`);
+      
+      db.ref(`${currentSeriesCategory}/${seriesId}/${seasonId}`).once("value").then(snapshot => {
+        const seasonData = snapshot.val();
+        episodesContainer.innerHTML = '';
+        
+        // Filter out non-episode keys (like 'name', 'desc')
+        const episodes = Object.entries(seasonData).filter(([key]) => key.startsWith('m'));
+        
+        if (episodes.length === 0) {
+          episodesContainer.innerHTML = '<p>لا توجد حلقات مضافة بعد</p>';
+          return;
+        }
+        
+        episodesContainer.innerHTML = '<h4 style="margin: 15px 0;">الحلقات المضافة:</h4>';
+        
+        const episodeList = document.createElement("div");
+        episodeList.className = "episode-list";
+        
+        episodes.forEach(([episodeId, episode]) => {
+          const episodeCard = document.createElement("div");
+          episodeCard.className = "episode-card";
+          episodeCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong>${episode.name}</strong>
+              <span class="badge badge-primary">${episode.rating}/10</span>
+            </div>
+            <p style="font-size: 14px; color: #aaa; margin-bottom: 8px;">${episode.tak}</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <img src="${episode.image}" style="width: 80px; height: 50px; object-fit: cover; border-radius: 4px;" 
+                   onerror="this.src='https://via.placeholder.com/80x50?text=No+Image'">
+              <p style="font-size: 13px; flex: 1;">${episode.desc}</p>
+            </div>
+            <div style="display: flex; gap: 5px;">
+              <a href="${episode.url}" target="_blank" style="text-decoration: none;">
+                <button class="btn-success" style="padding: 5px 10px; font-size: 12px;"><i class="fas fa-play"></i> مشاهدة</button>
+              </a>
+              <button class="btn-danger" style="padding: 5px 10px; font-size: 12px;" 
+                onclick="deleteEpisode('${seriesId}', '${seasonId}', '${episodeId}')">
+                <i class="fas fa-trash"></i> حذف
+              </button>
+            </div>
+          `;
+          episodeList.appendChild(episodeCard);
+        });
+        
+        episodesContainer.appendChild(episodeList);
+      });
+    }
+    
+    function updateSeasonSelect(seasons) {
+      const seasonSelect = document.getElementById("seasonSelect");
+      seasonSelect.innerHTML = '<option value="">اختر الموسم</option>';
+      
+      seasons.forEach(([seasonId, seasonData]) => {
+        const option = document.createElement("option");
+        option.value = seasonId;
+        option.textContent = seasonData.name;
+        seasonSelect.appendChild(option);
+      });
+      
+      seasonSelect.addEventListener('change', function() {
+        if (this.value) {
+          selectSeason(currentSelectedSeries, this.value);
+        } else {
+          currentSelectedSeason = null;
+          document.getElementById("seasonManagementSection").style.display = "none";
+        }
+      });
+    }
+    
+    function selectSeries(seriesId, seriesName) {
+      currentSelectedSeries = seriesId;
+      document.getElementById("selectedSeriesName").value = seriesName;
+      document.getElementById("manageSeriesSection").style.display = "block";
+      
+      // Load seasons for this series
+      db.ref(`${currentSeriesCategory}/${seriesId}`).once("value").then(snapshot => {
+        const seriesData = snapshot.val();
+        const seasons = Object.entries(seriesData).filter(([key]) => key.startsWith('s'));
+        updateSeasonSelect(seasons);
+      });
+    }
+    
+    function selectSeason(seriesId, seasonId) {
+      currentSelectedSeason = seasonId;
+      document.getElementById("seasonManagementSection").style.display = "block";
+      
+      // Load season description
+      db.ref(`${currentSeriesCategory}/${seriesId}/${seasonId}/desc`).once("value").then(snapshot => {
+        if (snapshot.exists()) {
+          document.getElementById("seasonDesc").value = snapshot.val();
+        } else {
+          document.getElementById("seasonDesc").value = "";
+        }
+      });
+    }
+    
+    function deleteSeries(seriesId) {
+      if (confirm(`هل أنت متأكد من حذف هذا المسلسل وجميع مواسمه وحلقاته؟`)) {
+        db.ref(`${currentSeriesCategory}/${seriesId}`).remove()
+          .then(() => {
+            alert("✅ تم حذف المسلسل بنجاح");
+            if (currentSelectedSeries === seriesId) {
+              currentSelectedSeries = null;
+              document.getElementById("manageSeriesSection").style.display = "none";
+            }
+            loadSeries();
+            updateCounts();
+          })
+          .catch(error => {
+            alert(`❌ حدث خطأ: ${error.message}`);
+          });
+      }
+    }
+    
+    function deleteCurrentSeason() {
+      if (currentSelectedSeries && currentSelectedSeason) {
+        deleteSeason(currentSelectedSeries, currentSelectedSeason);
+      }
+    }
+    
+    function deleteSeason(seriesId, seasonId) {
+      if (confirm(`هل أنت متأكد من حذف هذا الموسم وجميع حلقاته؟`)) {
+        db.ref(`${currentSeriesCategory}/${seriesId}/${seasonId}`).remove()
+          .then(() => {
+            alert("✅ تم حذف الموسم بنجاح");
+            if (currentSelectedSeason === seasonId) {
+              currentSelectedSeason = null;
+              document.getElementById("seasonManagementSection").style.display = "none";
+            }
+            loadSeries();
+            updateCounts();
+          })
+          .catch(error => {
+            alert(`❌ حدث خطأ: ${error.message}`);
+          });
+      }
+    }
+    
+    function deleteEpisode(seriesId, seasonId, episodeId) {
+      if (confirm(`هل أنت متأكد من حذف هذه الحلقة؟`)) {
+        db.ref(`${currentSeriesCategory}/${seriesId}/${seasonId}/${episodeId}`).remove()
+          .then(() => {
+            alert("✅ تم حذف الحلقة بنجاح");
+            loadSeries();
+            updateCounts();
+          })
+          .catch(error => {
+            alert(`❌ حدث خطأ: ${error.message}`);
+          });
+      }
+    }
+    
+    function clearEpisodeForm() {
+      document.getElementById("episodeName").value = "";
+      document.getElementById("episodeTak").value = "";
+      document.getElementById("episodeURL").value = "";
+      document.getElementById("episodeImage").value = "";
+      document.getElementById("episodeRating").value = "";
+      document.getElementById("episodeDesc").value = "";
+    }
+    
+    // General Functions
+    function deleteItem(category, key) {
+      if (confirm(`هل أنت متأكد من حذف هذا العنصر؟`)) {
+        db.ref(`${category}/${key}`).remove()
+          .then(() => {
+            alert("✅ تم الحذف بنجاح");
+            if (category.includes('Serious')) {
+              loadSeries();
+            } else {
+              loadMovies();
+            }
+            updateCounts();
+          })
+          .catch(error => {
+            alert(`❌ حدث خطأ: ${error.message}`);
+          });
+      }
+    }
+    
+    // Update counts for movies and series
+    function updateCounts() {
+      // Movies count
+      const movieCategories = ['ar', 'en', 'ani', 'kr'];
+      let totalMovies = 0;
+      
+      movieCategories.forEach(cat => {
+        db.ref(cat).once("value").then(snapshot => {
+          if (snapshot.exists()) {
+            totalMovies += snapshot.numChildren();
+          }
+          document.getElementById("moviesCount").textContent = totalMovies;
+        });
+      });
+      
+      // Series count (count episodes)
+      const seriesCategories = ['arSerious', 'trSerious', 'foreignSerious'];
+      let totalEpisodes = 0;
+      
+      seriesCategories.forEach(cat => {
+        db.ref(cat).once("value").then(snapshot => {
+          if (snapshot.exists()) {
+            snapshot.forEach(series => {
+              const seriesData = series.val();
+              Object.entries(seriesData).forEach(([key, seasonData]) => {
+                if (key.startsWith('s')) {
+                  totalEpisodes += Object.keys(seasonData).filter(epKey => epKey.startsWith('m')).length;
+                }
+              });
+            });
+          }
+          document.getElementById("seriesCount").textContent = totalEpisodes;
+        });
+      });
+    }
+    
+    // Initialize
+    window.onload = function() {
+      loadMovies();
+      loadSeries();
+      updateCounts();
+      
+      // Update movies list when category changes
+      document.getElementById("movieCategory").addEventListener('change', loadMovies);
+    };
+  </script>
+</body>
+</html>
